@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giám Sát Cảm Biến</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(to right, #e3f2fd, #f1f8e9);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        body.dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+
+        header {
+            background-color: #2196f3;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .toggle-darkmode {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            border: 1px solid white;
+            padding: 8px 12px;
+            color: yellow;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .auth-container.dark-mode {
+            background: #1e1e1e;
+        }
+
+        .auth-container h2 {
+            color: #2196f3;
+        }
+
+        .auth-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+
+        .auth-container button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #f5f5f5;
+            font-size: 12px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .dark-mode footer {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        /* Main container layout */
+        .container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(12, 1fr);
+            gap: 15px;
+            max-width: 1200px;
+            height: 80vh;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .container.dark-mode {
+            background: #1e1e1e;
+        }
+
+        /* Data display section */
+        .data-display {
+            grid-column: 1 / 3;
+            grid-row: 1 / 7;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .dark-mode .data-display {
+            background: #2c2c2c;
+        }
+
+        .sensor-data {
+            font-size: 24px;
+            margin: 10px 0;
+            padding: 0px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .temperature {
+            background-color: rgba(244, 67, 54, 0.1);
+            border-left: 5px solid #f44336;
+        }
+
+        .humidity {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-left: 5px solid #4caf50;
+        }
+
+        .gas {
+            background-color: rgba(255, 152, 0, 0.1);
+            border-left: 5px solid #ff9800;
+        }
+
+        .sensor-label {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .sensor-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .temp-value {
+            color: #f44336;
+        }
+
+        .hum-value {
+            color: #4caf50;
+        }
+
+        .gas-value {
+            color: #ff9800;
+        }
+
+        /* Pie charts section */
+        .pie-charts {
+            grid-column: 3 / 8;
+            grid-row: 1 / 7;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .dark-mode .pie-charts {
+            background: #2c2c2c;
+        }
+
+        .pie-chart-container {
+            width: 30%;
+            height: 90%;
+            position: relative;
+        }
+
+        .pie-chart-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Combined chart section */
+        .combined-chart {
+            grid-column: 8 / 13;
+            grid-row: 1 / 7;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .dark-mode .combined-chart {
+            background: #2c2c2c;
+        }
+
+        /* Line charts section */
+        .line-charts {
+            grid-column: 1 / 13;
+            grid-row: 7 / 13;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .line-chart {
+            flex: 1;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .dark-mode .line-chart {
+            background: #2c2c2c;
+        }
+
+        /* Logout button */
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 99;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+        }
+
+        .dark-mode .modal-content {
+            background: #1e1e1e;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #f44336;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Giám Sát Nhiệt Độ, Độ Ẩm & Khí Gas</h1>
+        <button class="toggle-darkmode" onclick="toggleDarkMode()">🌙 Chế độ tối</button>
+    </header>
+
+    <div class="auth-container" id="auth-container">
+        <h2>Đăng nhập / Đăng ký</h2>
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Mật khẩu" />
+        <button onclick="login()">Đăng nhập</button>
+        <button onclick="register()">Đăng ký</button>
+    </div>
+
+    <div class="container" id="sensor-container">
+        <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+        
+        <!-- Phần hiển thị dữ liệu bên trái -->
+        <div class="data-display">
+            <div class="sensor-data temperature">
+                <span class="sensor-label">🌡️ Nhiệt độ</span>
+                <span class="sensor-value temp-value" id="temperature">--</span> °C
+            </div>
+            <div class="sensor-data humidity">
+                <span class="sensor-label">💧 Độ ẩm</span>
+                <span class="sensor-value hum-value" id="humidity">--</span> %
+            </div>
+            <div class="sensor-data gas">
+                <span class="sensor-label">🔥 Khí gas</span>
+                <span class="sensor-value gas-value" id="gasValue">--</span>
+            </div>
+        </div>
+        
+        <!-- Phần biểu đồ tròn ở giữa -->
+        <div class="pie-charts">
+            <div class="pie-chart-container">
+                <canvas id="tempPieChart"></canvas>
+                <div class="pie-chart-value temp-value" id="tempPieValue">--</div>
+            </div>
+            <div class="pie-chart-container">
+                <canvas id="humPieChart"></canvas>
+                <div class="pie-chart-value hum-value" id="humPieValue">--</div>
+            </div>
+            <div class="pie-chart-container">
+                <canvas id="gasPieChart"></canvas>
+                <div class="pie-chart-value gas-value" id="gasPieValue">--</div>
+            </div>
+        </div>
+        
+        <!-- Biểu đồ đường tổng hợp bên phải -->
+        <div class="combined-chart">
+            <canvas id="combinedChart"></canvas>
+        </div>
+        
+        <!-- 3 biểu đồ đường phía dưới -->
+        <div class="line-charts">
+            <div class="line-chart">
+                <canvas id="tempChart"></canvas>
+            </div>
+            <div class="line-chart">
+                <canvas id="humChart"></canvas>
+            </div>
+            <div class="line-chart">
+                <canvas id="gasChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="chartModal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeModal()">✖</span>
+            <canvas id="bigChart" style="height:400px;"></canvas>
+        </div>
+    </div>
+
+    <footer>&copy; 2025 - Hệ thống giám sát cảm biến Realtime Firebase</footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDp8CSZgqR4zUr7CLiGpbRLFNFgLrHY37U",
+            authDomain: "real-time-data-6.firebaseapp.com",
+            databaseURL: "https://oiyt-79bf7-default-rtdb.firebaseio.com/",
+            projectId: "real-time-data-6",
+            storageBucket: "real-time-data-6.appspot.com",
+            messagingSenderId: "216498168272",
+            appId: "1:216498168272:web:8cf66bd79141f40db2d9d5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        const timeLabels = [], tempData = [], humData = [], gasData = [];
+
+        // Initialize pie charts
+        const tempPieChart = new Chart(document.getElementById("tempPieChart"), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['#f44336', '#eeeeee'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        const humPieChart = new Chart(document.getElementById("humPieChart"), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['#4caf50', '#eeeeee'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        const gasPieChart = new Chart(document.getElementById("gasPieChart"), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [0, 500],
+                    backgroundColor: ['#ff9800', '#eeeeee'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Initialize combined chart
+        const combinedChart = new Chart(document.getElementById("combinedChart"), {
+            type: "line",
+            data: {
+                labels: timeLabels,
+                datasets: [
+                    {
+                        label: "Nhiệt độ (°C)",
+                        data: tempData,
+                        borderColor: "#f44336",
+                        backgroundColor: "rgba(244,67,54,0.1)",
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: "Độ ẩm (%)",
+                        data: humData,
+                        borderColor: "#4caf50",
+                        backgroundColor: "rgba(76,175,80,0.1)",
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: "Khí gas",
+                        data: gasData,
+                        borderColor: "#ff9800",
+                        backgroundColor: "rgba(255,152,0,0.1)",
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+
+        // Initialize individual line charts
+        const tempChart = new Chart(document.getElementById("tempChart"), {
+            type: "line",
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: "Nhiệt độ (°C)",
+                    data: tempData,
+                    borderColor: "#f44336",
+                    backgroundColor: "rgba(244,67,54,0.1)",
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        const humChart = new Chart(document.getElementById("humChart"), {
+            type: "line",
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: "Độ ẩm (%)",
+                    data: humData,
+                    borderColor: "#4caf50",
+                    backgroundColor: "rgba(76,175,80,0.1)",
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        const gasChart = new Chart(document.getElementById("gasChart"), {
+            type: "line",
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: "Khí gas",
+                    data: gasData,
+                    borderColor: "#ff9800",
+                    backgroundColor: "rgba(255,152,0,0.1)",
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        function updateCharts(temp, hum, gas) {
+            const now = new Date().toLocaleTimeString();
+            if (timeLabels.length > 20) {
+                timeLabels.shift();
+                tempData.shift();
+                humData.shift();
+                gasData.shift();
+            }
+            timeLabels.push(now);
+            tempData.push(temp);
+            humData.push(hum);
+            gasData.push(gas);
+            
+            combinedChart.update();
+            tempChart.update();
+            humChart.update();
+            gasChart.update();
+            
+            // Update pie charts
+            tempPieChart.data.datasets[0].data = [temp || 0, 100 - (temp || 0)];
+            humPieChart.data.datasets[0].data = [hum || 0, 100 - (hum || 0)];
+            gasPieChart.data.datasets[0].data = [gas || 0, 500 - (gas || 0)];
+            
+            tempPieChart.update();
+            humPieChart.update();
+            gasPieChart.update();
+            
+            // Update pie chart values
+            document.getElementById("tempPieValue").textContent = temp ?? "--";
+            document.getElementById("humPieValue").textContent = hum ?? "--";
+            document.getElementById("gasPieValue").textContent = gas ?? "--";
+        }
+
+        window.toggleDarkMode = function () {
+            document.body.classList.toggle("dark-mode");
+            document.getElementById("auth-container").classList.toggle("dark-mode");
+            document.getElementById("sensor-container").classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode") ? "on" : "off");
+            
+            // Update charts for dark mode
+            combinedChart.update();
+            tempChart.update();
+            humChart.update();
+            gasChart.update();
+            tempPieChart.update();
+            humPieChart.update();
+            gasPieChart.update();
+        };
+
+        if (localStorage.getItem("darkMode") === "on") {
+            window.toggleDarkMode();
+        }
+
+        window.register = function () {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            if (!email || !password) {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => alert("Đăng ký thành công!"))
+                .catch((error) => alert("Lỗi: " + error.message));
+        };
+
+        window.login = function () {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            if (!email || !password) {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => alert("Đăng nhập thành công!"))
+                .catch((error) => alert("Lỗi: " + error.message));
+        };
+
+        window.logout = function () {
+            signOut(auth).then(() => alert("Đã đăng xuất."));
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById("auth-container").style.display = "none";
+                document.getElementById("sensor-container").style.display = "grid";
+
+                const tempRef = ref(db, "DHT_11/Temperature");
+                const humRef = ref(db, "DHT_11/Humidity");
+                const gasRef = ref(db, "DHT_11/Gas");
+
+                onValue(tempRef, (snap) => {
+                    const val = snap.val();
+                    document.getElementById("temperature").textContent = val ?? "--";
+                    document.getElementById("tempPieValue").textContent = val ?? "--";
+                    
+                    if (val > 40) {
+                        alert("Cảnh báo: Nhiệt độ vượt quá 40°C!");
+                    }
+                    
+                    tempPieChart.data.datasets[0].data = [val || 0, 100 - (val || 0)];
+                    tempPieChart.update();
+                    
+                    if (val) updateCharts(Number(val), Number(humData.at(-1) || 0, Number(gasData.at(-1) || 0)));
+                });
+
+                onValue(humRef, (snap) => {
+                    const val = snap.val();
+                    document.getElementById("humidity").textContent = val ?? "--";
+                    document.getElementById("humPieValue").textContent = val ?? "--";
+                    
+                    humPieChart.data.datasets[0].data = [val || 0, 100 - (val || 0)];
+                    humPieChart.update();
+                    
+                    if (val) updateCharts(Number(tempData.at(-1) || 0), Number(val), Number(gasData.at(-1) || 0));
+                });
+
+                onValue(gasRef, (snap) => {
+                    const val = snap.val();
+                    document.getElementById("gasValue").textContent = val ?? "--";
+                    document.getElementById("gasPieValue").textContent = val ?? "--";
+                    
+                    gasPieChart.data.datasets[0].data = [val || 0, 500 - (val || 0)];
+                    gasPieChart.update();
+                    
+                    if (val > 400) {
+                        alert("Cảnh báo: Nồng độ khí gas cao!");
+                    }
+                    
+                    if (val) updateCharts(Number(tempData.at(-1) || 0), Number(humData.at(-1) || 0), Number(val));
+                });
+            } else {
+                document.getElementById("auth-container").style.display = "block";
+                document.getElementById("sensor-container").style.display = "none";
+            }
+        });
+
+        let bigChart;
+        window.openModal = function (type) {
+            const canvas = document.getElementById("bigChart");
+            const ctx = canvas.getContext("2d");
+
+            const dataMap = {
+                temp: { label: "Nhiệt độ (°C)", data: tempData, borderColor: "#f44336", backgroundColor: "rgba(244,67,54,0.1)" },
+                hum: { label: "Độ ẩm (%)", data: humData, borderColor: "#4caf50", backgroundColor: "rgba(76,175,80,0.1)" },
+                gas: { label: "Khí gas", data: gasData, borderColor: "#ff9800", backgroundColor: "rgba(255,152,0,0.1)" }
+            };
+
+            const chartData = dataMap[type];
+            if (bigChart) bigChart.destroy();
+
+            bigChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: chartData.label,
+                        data: chartData.data,
+                        borderColor: chartData.borderColor,
+                        backgroundColor: chartData.backgroundColor,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+
+            document.getElementById("chartModal").style.display = "flex";
+        };
+
+        window.closeModal = function () {
+            document.getElementById("chartModal").style.display = "none";
+        };
+    </script>
+</body>
+
+</html>
